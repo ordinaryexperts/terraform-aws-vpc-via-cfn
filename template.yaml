@@ -1,0 +1,312 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+
+  AvailabilityZone2:
+    Type: String
+
+  AvailabilityZone3:
+    Type: String
+
+  EnvName:
+    Type: String
+
+Mappings:
+  CidrBlockMap:
+    Private:
+      '1': '10.0.0.0/19'
+      '2': '10.0.64.0/19'
+      '3': '10.0.128.0/19'
+    Public:
+      '1': '10.0.32.0/20'
+      '2': '10.0.96.0/20'
+      '3': '10.0.160.0/20'
+    Spare:
+      '1': '10.0.48.0/20'
+      '2': '10.0.112.0/20'
+      '3': '10.0.176.0/20'
+
+Resources:
+  Vpc:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: 'default'
+      Tags:
+        -
+          Key: Name
+          Value: !Ref EnvName
+
+  # Same settings as default but we make our own so deleting stacks works
+  # https://forums.aws.amazon.com/message.jspa?messageID=409995
+  DhcpOptions:
+    Type: 'AWS::EC2::DHCPOptions'
+    Properties:
+      DomainName: 'ec2.internal'
+      DomainNameServers:
+        - 'AmazonProvidedDNS'
+
+  VpcDhcpAssociation:
+    Type: 'AWS::EC2::VPCDHCPOptionsAssociation'
+    Properties:
+      DhcpOptionsId: !Ref DhcpOptions
+      VpcId: !Ref Vpc
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        -
+          Key: Network
+          Value: Public
+
+  GatewayToInternet:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    DependsOn:
+      - 'Vpc'
+      - 'InternetGateway'
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc
+
+  PublicRoute:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Public', '1']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Public ',  !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+
+  PublicRouteAssociation1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Public', '2']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Public ',  !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+
+  PublicRouteAssociation2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PublicSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Public', '3']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Public ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+
+  PublicRouteAssociation3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet3
+
+  NatEip:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: 'vpc'
+
+  NatGateway:
+    Type: 'AWS::EC2::NatGateway'
+    DependsOn:
+      - 'GatewayToInternet'
+      - 'NatEip'
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc
+
+  PrivateRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn:
+      - 'PrivateRouteTable'
+      - 'NatGateway'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Private', '1']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Private ',  !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+
+  PublicRouteAssociation1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Private', '2']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Private ',  !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+
+  PrivateRouteAssociation2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  PrivateSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Private', '3']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Private ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+
+  PrivateRouteAssociation3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet3
+
+  SpareSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '1']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Spare ',  !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
+
+  SpareRouteAssociation1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref SpareSubnet1
+
+  SpareSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '2']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Spare ',  !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
+
+  SpareRouteAssociation2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref SpareSubnet2
+
+  SpareSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    DependsOn: 'Vpc'
+    Properties:
+      AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '3']
+      VpcId: !Ref Vpc
+      Tags:
+        -
+          Key: Name
+          Value: !Join ['', [ !Ref EnvName, ' Spare ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
+
+  SpareRouteAssociation3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref SpareSubnet3
+
+Outputs:
+
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+  PublicSubnet3:
+    Value: !Ref PublicSubnet3
+
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+  PrivateSubnet3:
+    Value: !Ref PrivateSubnet3
+
+  SpareSubnet1:
+    Value: !Ref SpareSubnet1
+  SpareSubnet2:
+    Value: !Ref SpareSubnet2
+  SpareSubnet3:
+    Value: !Ref SpareSubnet3
+
+  VpcId:
+    Value: !Ref Vpc
