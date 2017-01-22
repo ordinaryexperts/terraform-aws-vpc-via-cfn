@@ -176,7 +176,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Private', '1']
       VpcId: !Ref Vpc
       Tags:
@@ -195,7 +194,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Private', '2']
       VpcId: !Ref Vpc
       Tags:
@@ -214,7 +212,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Private', '3']
       VpcId: !Ref Vpc
       Tags:
@@ -233,7 +230,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '1']
       VpcId: !Ref Vpc
       Tags:
@@ -252,7 +248,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone2 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '2']
       VpcId: !Ref Vpc
       Tags:
@@ -271,7 +266,6 @@ Resources:
     DependsOn: 'Vpc'
     Properties:
       AvailabilityZone: !Join ['', [ !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
-      MapPublicIpOnLaunch: true
       CidrBlock: !FindInMap [CidrBlockMap, 'Spare', '3']
       VpcId: !Ref Vpc
       Tags:
