@@ -3,7 +3,7 @@ data "template_file" "vpc_template" {
 }
 
 resource "aws_cloudformation_stack" "vpc" {
-  name = "vpc-stack"
+  name = "${var-env}-vpc-stack"
   parameters {
     AvailabilityZone1 = "${var.az1}"
     AvailabilityZone2 = "${var.az2}"
