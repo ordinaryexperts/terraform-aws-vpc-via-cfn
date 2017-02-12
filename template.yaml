@@ -183,7 +183,7 @@ Resources:
           Key: Name
           Value: !Join ['', [ !Ref EnvName, ' Private ',  !Ref 'AWS::Region', !Ref AvailabilityZone1 ]]
 
-  PublicRouteAssociation1:
+  PrivateRouteAssociation1:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref PrivateRouteTable
