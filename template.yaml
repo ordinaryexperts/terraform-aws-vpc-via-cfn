@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Parameters:
+
+  Active:
+    Default: true
+    Type: String
+    AllowedValues: [true, false]
+
   AvailabilityZone1:
     Type: String
 
@@ -13,7 +19,12 @@ Parameters:
   EnvName:
     Type: String
 
+Conditions:
+  IsActive:
+    !Equals [true, !Ref Active]
+
 Mappings:
+
   CidrBlockMap:
     Private:
       '1': '10.0.0.0/19'
@@ -29,6 +40,7 @@ Mappings:
       '3': '10.0.176.0/20'
 
 Resources:
+
   Vpc:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -148,6 +160,7 @@ Resources:
       Domain: 'vpc'
 
   NatGateway:
+    Condition: 'IsActive'
     Type: 'AWS::EC2::NatGateway'
     DependsOn:
       - 'GatewayToInternet'
@@ -165,11 +178,10 @@ Resources:
     Type: 'AWS::EC2::Route'
     DependsOn:
       - 'PrivateRouteTable'
-      - 'NatGateway'
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGateway
+      NatGatewayId: !If [IsActive, !Ref NatGateway, !Ref 'AWS::NoValue']
 
   PrivateSubnet1:
     Type: 'AWS::EC2::Subnet'
