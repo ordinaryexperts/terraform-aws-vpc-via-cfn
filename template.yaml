@@ -175,6 +175,7 @@ Resources:
       VpcId: !Ref Vpc
 
   PrivateRoute:
+    Condition: 'IsActive'
     Type: 'AWS::EC2::Route'
     DependsOn:
       - 'PrivateRouteTable'
