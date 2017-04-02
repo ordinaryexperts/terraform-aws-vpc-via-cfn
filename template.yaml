@@ -317,3 +317,5 @@ Outputs:
 
   VpcId:
     Value: !Ref Vpc
+  VpcId2:
+    Value: !Ref Vpc
