@@ -296,6 +296,8 @@ Outputs:
 
   PublicSubnet1:
     Value: !Ref PublicSubnet1
+  PublicSubnet1v2:
+    Value: !Ref PublicSubnet1
   PublicSubnet2:
     Value: !Ref PublicSubnet2
   PublicSubnet3:
