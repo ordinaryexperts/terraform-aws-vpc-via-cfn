@@ -14,6 +14,7 @@ Parameters:
     Type: String
 
   AvailabilityZone3:
+    Default: ''
     Type: String
 
   EnvName:
@@ -22,6 +23,9 @@ Parameters:
 Conditions:
   IsActive:
     !Equals [true, !Ref Active]
+
+  AvailabilityZone3Exists:
+    !Not [!Equals [!Ref AvailabilityZone3, '']]
 
 Mappings:
 
@@ -136,6 +140,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
 
   PublicSubnet3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::Subnet'
     DependsOn: 'Vpc'
     Properties:
@@ -149,6 +154,7 @@ Resources:
           Value: !Join ['', [ !Ref EnvName, ' Public ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
 
   PublicRouteAssociation3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref PublicRouteTable
@@ -221,6 +227,7 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
 
   PrivateSubnet3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::Subnet'
     DependsOn: 'Vpc'
     Properties:
@@ -233,6 +240,7 @@ Resources:
           Value: !Join ['', [ !Ref EnvName, ' Private ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
 
   PrivateRouteAssociation3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref PrivateRouteTable
@@ -275,6 +283,7 @@ Resources:
       SubnetId: !Ref SpareSubnet2
 
   SpareSubnet3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::Subnet'
     DependsOn: 'Vpc'
     Properties:
@@ -287,6 +296,7 @@ Resources:
           Value: !Join ['', [ !Ref EnvName, ' Spare ',  !Ref 'AWS::Region', !Ref AvailabilityZone3 ]]
 
   SpareRouteAssociation3:
+    Condition: 'AvailabilityZone3Exists'
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       RouteTableId: !Ref PublicRouteTable
@@ -299,21 +309,21 @@ Outputs:
   PublicSubnet2:
     Value: !Ref PublicSubnet2
   PublicSubnet3:
-    Value: !Ref PublicSubnet3
+    Value: !If [AvailabilityZone3Exists, !Ref PublicSubnet3, '']
 
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
   PrivateSubnet3:
-    Value: !Ref PrivateSubnet3
+    Value: !If [AvailabilityZone3Exists, !Ref PrivateSubnet3, '']
 
   SpareSubnet1:
     Value: !Ref SpareSubnet1
   SpareSubnet2:
     Value: !Ref SpareSubnet2
   SpareSubnet3:
-    Value: !Ref SpareSubnet3
+    Value: !If [AvailabilityZone3Exists, !Ref SpareSubnet3, '']
 
   VpcId:
     Value: !Ref Vpc

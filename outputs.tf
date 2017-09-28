@@ -1,5 +1,5 @@
 output "public_subnets" {
-  value = "${aws_cloudformation_stack.vpc.outputs["PublicSubnet1"]},${aws_cloudformation_stack.vpc.outputs["PublicSubnet2"]},${aws_cloudformation_stack.vpc.outputs["PublicSubnet3"]}"
+  value = "${join(",", compact(split(",", "${aws_cloudformation_stack.vpc.outputs["PublicSubnet1"]},${aws_cloudformation_stack.vpc.outputs["PublicSubnet2"]},${aws_cloudformation_stack.vpc.outputs["PublicSubnet3"]}")))}"
 }
 
 output "public_subnet_1" {
@@ -15,7 +15,7 @@ output "public_subnet_3" {
 }
 
 output "private_subnets" {
-  value = "${aws_cloudformation_stack.vpc.outputs["PrivateSubnet1"]},${aws_cloudformation_stack.vpc.outputs["PrivateSubnet2"]},${aws_cloudformation_stack.vpc.outputs["PrivateSubnet3"]}"
+  value = "${join(",", compact(split(",", "${aws_cloudformation_stack.vpc.outputs["PrivateSubnet1"]},${aws_cloudformation_stack.vpc.outputs["PrivateSubnet2"]},${aws_cloudformation_stack.vpc.outputs["PrivateSubnet3"]}")))}"
 }
 
 output "private_subnet_1" {
@@ -35,7 +35,7 @@ output "spare_subnet_1" {
 }
 
 output "spare_subnets" {
-  value = "${aws_cloudformation_stack.vpc.outputs["SpareSubnet1"]},${aws_cloudformation_stack.vpc.outputs["SpareSubnet2"]},${aws_cloudformation_stack.vpc.outputs["SpareSubnet3"]}"
+  value = "${join(",", compact(split(",", "${aws_cloudformation_stack.vpc.outputs["SpareSubnet1"]},${aws_cloudformation_stack.vpc.outputs["SpareSubnet2"]},${aws_cloudformation_stack.vpc.outputs["SpareSubnet3"]}")))}"
 }
 
 output "spare_subnet_2" {
