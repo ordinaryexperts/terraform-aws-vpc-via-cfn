@@ -17,6 +17,11 @@ Parameters:
     Default: ''
     Type: String
 
+  EnableNat:
+    Default: true
+    Type: String
+    AllowedValues: [true, false]
+
   EnvName:
     Type: String
 
@@ -26,6 +31,9 @@ Conditions:
 
   AvailabilityZone3Exists:
     !Not [!Equals [!Ref AvailabilityZone3, '']]
+
+  NatEnabled:
+    !And [!Condition IsActive, !Equals [true, !Ref EnableNat]]
 
 Mappings:
 
@@ -161,12 +169,13 @@ Resources:
       SubnetId: !Ref PublicSubnet3
 
   NatEip:
+    Condition: 'NatEnabled'
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: 'vpc'
 
   NatGateway:
-    Condition: 'IsActive'
+    Condition: 'NatEnabled'
     Type: 'AWS::EC2::NatGateway'
     DependsOn:
       - 'GatewayToInternet'
@@ -181,14 +190,14 @@ Resources:
       VpcId: !Ref Vpc
 
   PrivateRoute:
-    Condition: 'IsActive'
+    Condition: 'NatEnabled'
     Type: 'AWS::EC2::Route'
     DependsOn:
       - 'PrivateRouteTable'
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !If [IsActive, !Ref NatGateway, !Ref 'AWS::NoValue']
+      NatGatewayId: !Ref NatGateway
 
   PrivateSubnet1:
     Type: 'AWS::EC2::Subnet'
