@@ -9,6 +9,7 @@ resource "aws_cloudformation_stack" "vpc" {
     AvailabilityZone1 = "${var.az1}"
     AvailabilityZone2 = "${var.az2}"
     AvailabilityZone3 = "${var.az3}"
+    EnableNat = "${var.enable_nat}"
     EnvName = "${var.env}"
   }
   template_body = "${data.template_file.vpc_template.rendered}"
