@@ -1,3 +1,6 @@
 Unreleased
 ==========
-* Support different AZ counts.
+
+1.0.0
+=====
+* Initial release
