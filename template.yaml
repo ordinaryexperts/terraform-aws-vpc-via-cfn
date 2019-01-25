@@ -334,5 +334,10 @@ Outputs:
   SpareSubnet3:
     Value: !If [AvailabilityZone3Exists, !Ref SpareSubnet3, '']
 
+  # This should be bumped manually with each release to force clean updates
+  # even when the template changes are a no-op
+  TemplateVersion:
+    Value: 1.0.1
+
   VpcId:
     Value: !Ref Vpc
