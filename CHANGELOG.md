@@ -1,5 +1,6 @@
 Unreleased
 ==========
+* Upgrading to Terraform 12
 
 1.0.1
 =====
