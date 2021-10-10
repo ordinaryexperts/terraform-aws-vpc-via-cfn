@@ -8,6 +8,6 @@ resource "aws_cloudformation_stack" "vpc" {
     EnableNat = var.enable_nat
     EnvName = var.env
   }
-  template_body = "${file("${path.module}/template.yaml")}"
+  template_body = file("${path.module}/template.yaml")
   on_failure = "DELETE"
 }
